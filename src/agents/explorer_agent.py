@@ -26,11 +26,14 @@ When creating views:
 - Focus on GROUP BY aggregations, statistical baselines, dimension summaries
 - Add clear descriptions for the View Catalog
 
-SQL Guidelines:
+SQL Guidelines - CRITICAL:
 - Use SQLite syntax (not T-SQL)
 - Use strftime() for date formatting
 - Use ROUND() for decimal precision
 - Always include meaningful column aliases
+- ONLY use columns that exist in the schema provided
+- Common columns: txn_id, customer_id, merchant_id, channel_id, amount, txn_date, fraud_flag, fraud_score, status
+- NEVER invent columns unless shown in schema context
 - Test queries are valid before creating views
 
 Output Format:

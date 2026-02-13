@@ -4,6 +4,7 @@ Database connection manager for SQLite with context manager pattern.
 
 import sqlite3
 import logging
+import math
 from pathlib import Path
 from typing import Optional
 from contextlib import contextmanager
@@ -70,6 +71,25 @@ class DatabaseConnection:
 
             # Return rows as Row objects (dict-like access)
             conn.row_factory = sqlite3.Row
+
+            # Register custom aggregate functions
+            class StdDevAggregate:
+                def __init__(self):
+                    self.values = []
+
+                def step(self, value):
+                    if value is not None:
+                        self.values.append(float(value))
+
+                def finalize(self):
+                    if len(self.values) < 2:
+                        return 0.0
+                    n = len(self.values)
+                    mean = sum(self.values) / n
+                    variance = sum((x - mean) ** 2 for x in self.values) / (n - 1)
+                    return math.sqrt(variance)
+
+            conn.create_aggregate("STDDEV", 1, StdDevAggregate)
 
             logger.debug(f"Database connection opened: {self.db_path}")
             yield conn

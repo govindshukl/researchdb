@@ -26,12 +26,15 @@ When querying:
 - Use window functions for trend analysis (LAG, LEAD, OVER)
 - Include anomaly detection where relevant
 
-SQL Guidelines:
+SQL Guidelines - CRITICAL:
 - Use SQLite syntax (not T-SQL)
 - Window functions: OVER (PARTITION BY ... ORDER BY ...)
-- Statistical functions: AVG, STDDEV, PERCENTILE
+- Statistical functions: AVG, STDDEV (custom function available)
 - Temporal analysis: strftime, date arithmetic
-- Always test queries before creating views
+- ONLY use columns that exist in the schema provided
+- Common columns: txn_id, customer_id, merchant_id, channel_id, amount, txn_date, fraud_flag, fraud_score, status
+- NEVER invent columns like 'risk_score', 'mcc_code', 'country' unless shown in schema
+- Test queries logically before creating views
 
 Output Format:
 Return a JSON object with:
