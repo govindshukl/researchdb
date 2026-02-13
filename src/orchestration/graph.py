@@ -225,11 +225,18 @@ def report_node(state: ResearchState) -> ResearchState:
 
             query_results = state.get('query_results', [])
             if query_results:
-                report_sections.append(f"\n\nAnalytical Queries Executed: {len(query_results)}")
-                for qr in query_results[:3]:  # Show first 3
-                    if qr.get('success'):
-                        report_sections.append(f"\n  • {qr.get('purpose', 'Unknown')}")
-                        report_sections.append(f"    Rows: {qr.get('row_count', 0)}")
+                successful_queries = [qr for qr in query_results if qr.get('success')]
+                report_sections.append(f"\n\nAnalytical Queries Executed: {len(successful_queries)} successful, {len(query_results) - len(successful_queries)} failed")
+
+                # Show first 5 successful queries with actual results
+                for qr in successful_queries[:5]:
+                    report_sections.append(f"\n  • {qr.get('purpose', 'Unknown')}")
+                    report_sections.append(f"    Rows: {qr.get('row_count', 0)}")
+
+                    # Show sample data from results
+                    if qr.get('results') and len(qr['results']) > 0:
+                        sample = qr['results'][0]  # First row
+                        report_sections.append(f"    Sample: {dict(sample)}")
 
         # Views created
         views_created = state.get('views_created', [])

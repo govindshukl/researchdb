@@ -44,7 +44,7 @@ Return a JSON object with:
     {
       "purpose": "What this query answers",
       "sql": "SELECT ...",
-      "insights": "Key findings from results"
+      "insights": "Key findings from results - BE SPECIFIC with numbers when possible"
     }
   ],
   "views_to_create": [
@@ -57,7 +57,7 @@ Return a JSON object with:
       "sql": "CREATE VIEW v_... AS SELECT ..."
     }
   ],
-  "report": "Executive summary with key findings and recommendations"
+  "report": "Executive summary with SPECIFIC DATA-DRIVEN findings. Include actual numbers, trends, and patterns found in the query results. Avoid generic statements - use concrete metrics and examples."
 }
 """
 
@@ -114,8 +114,13 @@ class ResearcherAgent(BaseAgent):
             if result['success']:
                 created_views.append(result['view'])
 
-        # Step 5: Generate report
-        report = research_plan.get('report', 'Analysis complete.')
+        # Step 5: Generate report with ACTUAL query results
+        report = self.generate_findings_report(
+            query=query,
+            query_results=query_results,
+            created_views=created_views,
+            initial_analysis=research_plan.get('analysis', '')
+        )
 
         logger.info(f"Researcher created {len(created_views)} views")
 
@@ -355,6 +360,68 @@ Execute analytical queries and create Layer 2 views for complex findings.
         )
 
         return response
+
+    def generate_findings_report(
+        self,
+        query: str,
+        query_results: List[Dict[str, Any]],
+        created_views: List[Any],
+        initial_analysis: str
+    ) -> str:
+        """
+        Generate final report with actual query results.
+
+        Args:
+            query: User's original query
+            query_results: Results from executed queries
+            created_views: Views that were created
+            initial_analysis: Initial analysis from planning
+
+        Returns:
+            Formatted report string
+        """
+        # Build summary of successful queries with actual data
+        successful_results = [qr for qr in query_results if qr.get('success')]
+
+        if not successful_results:
+            return "Analysis complete but no successful queries executed. Please refine the query or check data availability."
+
+        results_summary = []
+        for qr in successful_results[:10]:  # Top 10 queries
+            results_summary.append(f"\n**{qr['purpose']}**")
+            results_summary.append(f"Rows returned: {qr['row_count']}")
+
+            # Show sample data
+            if qr.get('results') and len(qr['results']) > 0:
+                results_summary.append("Sample results:")
+                for i, row in enumerate(qr['results'][:3]):  # First 3 rows
+                    results_summary.append(f"  Row {i+1}: {dict(row)}")
+
+        # Format views created
+        views_summary = []
+        if created_views:
+            views_summary.append(f"\nCreated {len(created_views)} Layer 2 research views:")
+            for view in created_views[:5]:
+                views_summary.append(f"  - {view.view_name}: {view.description[:100]}")
+
+        # Combine into report
+        report = f"""
+{initial_analysis}
+
+## QUERY RESULTS
+
+{chr(10).join(results_summary)}
+
+## VIEWS CREATED
+
+{chr(10).join(views_summary) if views_summary else 'No views created in this session.'}
+
+## RECOMMENDATIONS
+
+Based on the query results above, use the created views for ongoing monitoring and trend detection.
+Focus on the specific metrics and patterns identified in the data samples.
+"""
+        return report
 
     def compare_views(self, view_name1: str, view_name2: str) -> Dict[str, Any]:
         """
