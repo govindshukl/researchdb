@@ -1,0 +1,42 @@
+# Core LangGraph and LangChain
+langgraph==0.2.45
+langchain==0.3.7
+langchain-core==0.3.15
+langchain-anthropic==0.2.4
+anthropic==0.39.0
+
+# Graph Processing
+networkx==3.2.1
+matplotlib==3.8.2
+
+# Semantic Search and Embeddings
+sentence-transformers==3.3.1
+numpy==1.26.4
+scikit-learn==1.4.0
+
+# Data Processing
+pandas==2.2.0
+faker==30.8.2
+
+# Utilities and Configuration
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+pyyaml==6.0.2
+
+# SQL Utilities
+sqlparse==0.5.3
+
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-asyncio==0.24.0
+
+# Development Tools
+black==24.10.0
+ruff==0.8.4
+ipykernel==6.29.5
+jupyter==1.1.1
+
+# Logging
+colorlog==6.9.0
