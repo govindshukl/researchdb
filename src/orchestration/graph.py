@@ -309,6 +309,11 @@ def run_research_workflow(
     logger.info(f"Starting research workflow for query: {user_query}")
 
     try:
+        # Initialize database connection (ensure singleton is initialized)
+        from pathlib import Path
+        db_path = Path(__file__).parent.parent.parent / 'data' / 'researchdb.db'
+        get_db(str(db_path))
+
         # Create initial state
         initial_state = create_initial_state(
             user_query=user_query,
