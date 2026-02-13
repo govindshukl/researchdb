@@ -104,6 +104,8 @@ class ExplorerAgent(BaseAgent):
             result = self.create_discovery_view(view_rec)
             if result['success']:
                 created_views.append(result['view'])
+            else:
+                logger.warning(f"Failed to create view {view_rec.get('name')}: {result.get('errors', 'Unknown error')}")
 
         # Step 6: Build context for Researcher
         explorer_context = {

@@ -46,16 +46,21 @@ def explore_node(state: ResearchState) -> ResearchState:
     Returns:
         Updated state with Explorer results
     """
-    logger.info("Running Explorer agent...")
+    logger.info("=" * 80)
+    logger.info("EXPLORE NODE - Starting")
+    logger.info("=" * 80)
     state['current_step'] = "EXPLORE"
 
     try:
         # Initialize Explorer
         db = get_db()
         explorer = ExplorerAgent(db=db, role=state['user_role'])
+        logger.info(f"Explorer initialized for role: {state['user_role']}")
 
         # Process query
+        logger.info(f"Processing query: {state['user_query']}")
         result = explorer.process(state['user_query'])
+        logger.info(f"Explorer process returned: success={result.get('success')}")
 
         # Update state
         state['explorer_result'] = result
@@ -63,18 +68,22 @@ def explore_node(state: ResearchState) -> ResearchState:
         if result['success']:
             # Extract context
             context = result.get('context', {})
+            logger.info(f"Context keys: {list(context.keys())}")
 
             # Accumulate tables and views
             if 'relevant_tables' in context:
                 state['relevant_tables'] = context['relevant_tables']
+                logger.info(f"Relevant tables: {context['relevant_tables']}")
 
             if 'existing_views' in context:
                 state['existing_views'] = context['existing_views']
+                logger.info(f"Existing views found: {len(context['existing_views'])}")
 
             if 'created_views' in context:
                 # Add created view names
                 created_view_names = [v.view_name for v in result.get('created_views', [])]
                 state['views_created'] = created_view_names
+                logger.info(f"Views created by Explorer: {created_view_names}")
 
             logger.info(
                 f"Explorer complete: {len(state.get('views_created', []))} views created, "
@@ -88,6 +97,8 @@ def explore_node(state: ResearchState) -> ResearchState:
         state['error'] = f"Explorer error: {str(e)}"
         logger.error(f"Explorer failed with exception: {e}", exc_info=True)
 
+    logger.info("EXPLORE NODE - Complete")
+    logger.info("=" * 80)
     return state
 
 
@@ -101,21 +112,27 @@ def research_node(state: ResearchState) -> ResearchState:
     Returns:
         Updated state with Researcher results
     """
-    logger.info("Running Researcher agent...")
+    logger.info("=" * 80)
+    logger.info("RESEARCH NODE - Starting")
+    logger.info("=" * 80)
     state['current_step'] = "RESEARCH"
 
     try:
         # Initialize Researcher
         db = get_db()
         researcher = ResearcherAgent(db=db, role=state['user_role'])
+        logger.info(f"Researcher initialized for role: {state['user_role']}")
 
         # Build context from Explorer (if available)
         context = None
         if state.get('explorer_result'):
             context = state['explorer_result'].get('context')
+            logger.info(f"Using Explorer context with keys: {list(context.keys()) if context else 'None'}")
 
         # Process query
+        logger.info(f"Processing query: {state['user_query']}")
         result = researcher.process(state['user_query'], context=context)
+        logger.info(f"Researcher process returned: success={result.get('success')}")
 
         # Update state
         state['researcher_result'] = result
@@ -124,11 +141,15 @@ def research_node(state: ResearchState) -> ResearchState:
             # Accumulate query results
             if 'query_results' in result:
                 state['query_results'] = result['query_results']
+                logger.info(f"Query results count: {len(result['query_results'])}")
 
             # Accumulate created views
             if 'created_views' in result:
                 created_view_names = [v.view_name for v in result.get('created_views', [])]
+                logger.info(f"Views created by Researcher: {created_view_names}")
+                logger.info(f"Current views_created list before extend: {state.get('views_created', [])}")
                 state['views_created'].extend(created_view_names)
+                logger.info(f"Current views_created list after extend: {state['views_created']}")
 
             # Store analysis
             state['analysis'] = result.get('analysis', '')
@@ -145,6 +166,8 @@ def research_node(state: ResearchState) -> ResearchState:
         state['error'] = f"Researcher error: {str(e)}"
         logger.error(f"Researcher failed with exception: {e}", exc_info=True)
 
+    logger.info("RESEARCH NODE - Complete")
+    logger.info("=" * 80)
     return state
 
 
@@ -210,11 +233,16 @@ def report_node(state: ResearchState) -> ResearchState:
 
         # Views created
         views_created = state.get('views_created', [])
+        logger.info(f"REPORT: views_created list = {views_created}")
+        logger.info(f"REPORT: Unique views = {list(set(views_created)) if views_created else []}")
+
         if views_created:
+            # Deduplicate views for display
+            unique_views = list(dict.fromkeys(views_created))  # Preserves order
             report_sections.append("\n\n## VIEWS CREATED")
             report_sections.append("-" * 80)
-            report_sections.append(f"\nTotal Views: {len(views_created)}")
-            for view_name in views_created:
+            report_sections.append(f"\nTotal Views: {len(unique_views)}")
+            for view_name in unique_views:
                 report_sections.append(f"  ✓ {view_name}")
 
         # Final report from researcher

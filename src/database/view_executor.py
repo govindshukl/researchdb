@@ -20,7 +20,8 @@ class ViewExecutor:
     # Validation rules for view DDL
     ALLOWED_STATEMENTS = ['CREATE VIEW', 'CREATE OR REPLACE VIEW']
     BLOCKED_PATTERNS = [
-        r'\bORDER\s+BY\b(?!.*\bTOP\b)',  # ORDER BY without TOP
+        # NOTE: ORDER BY is allowed in SQLite views (unlike some other databases)
+        # SQLite materializes the ORDER BY in the view definition
         r'\bINTO\b',                      # SELECT INTO
         r'\bOPTION\b',                    # Query hints
         r'\bEXEC\b',                      # No EXEC calls

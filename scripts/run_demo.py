@@ -169,10 +169,11 @@ def run_query(query_text: str, session_id: str = None):
         # Show session info
         print(f"Session ID: {result['session_id']}")
 
-        # Show views
+        # Show views (deduplicated)
         if result['views_created']:
-            print(f"\nViews Created: {len(result['views_created'])}")
-            for view in result['views_created']:
+            unique_views = list(dict.fromkeys(result['views_created']))  # Preserve order, remove dupes
+            print(f"\nViews Created: {len(unique_views)}")
+            for view in unique_views:
                 print(f"  ✓ {view}")
 
         if result['views_used']:
