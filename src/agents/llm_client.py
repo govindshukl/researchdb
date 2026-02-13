@@ -24,7 +24,7 @@ class ClaudeClient:
         self,
         api_key: Optional[str] = None,
         model: str = "claude-haiku-4-5-20251001",
-        max_tokens: int = 4096,
+        max_tokens: int = 8192,
         temperature: float = 0.7
     ):
         """

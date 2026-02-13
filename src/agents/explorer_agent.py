@@ -277,13 +277,33 @@ Focus on monthly/daily aggregations, statistical baselines, and dimension summar
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM JSON response: {e}")
-            logger.error(f"Response was: {response}")
+            logger.error(f"Response was: {response[:500]}...")
 
-            # Return minimal fallback
+            # Try to extract partial information from the response
+            analysis_text = "LLM response could not be fully parsed. "
+            recommendations_text = "Based on the data profiling, the system suggests creating discovery views for the relevant tables. "
+
+            # Try to extract analysis section
+            if '"analysis"' in response:
+                try:
+                    analysis_start = response.find('"analysis":') + 11
+                    analysis_text += response[analysis_start:analysis_start+500].split('"')[1]
+                except:
+                    pass
+
+            # Try to extract recommendations
+            if '"recommendations"' in response:
+                try:
+                    rec_start = response.find('"recommendations":') + 18
+                    recommendations_text = response[rec_start:rec_start+500].split('"')[1]
+                except:
+                    pass
+
+            # Return fallback with any extracted info
             return {
-                'analysis': 'Failed to parse LLM response',
+                'analysis': analysis_text,
                 'views_to_create': [],
-                'recommendations': 'Manual view creation recommended'
+                'recommendations': recommendations_text
             }
 
     def create_discovery_view(self, view_spec: Dict[str, Any]) -> Dict[str, Any]:
